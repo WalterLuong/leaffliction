@@ -6,7 +6,7 @@
 #    By: wluong <wluong@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/05 11:30:55 by wluong            #+#    #+#              #
-#    Updated: 2023/07/05 14:03:47 by wluong           ###   ########.fr        #
+#    Updated: 2023/07/05 16:02:10 by wluong           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,6 +28,7 @@ if __name__ == '__main__':
         # Data and labels
         colors=['cornflowerblue', 'crimson', 'green', 'pink', 'cyan', 'pink', 'yellow']
         classes = [str(x).split('/')[-1] for x in plant.iterdir() if x.is_dir()]
+        print(classes)
         distribution = [(len(list(Path(pathname + classe).iterdir()))) for classe in classes]
 
         fig1, (ax1, ax2) = plt.subplots(1,2, figsize=(20,20))
