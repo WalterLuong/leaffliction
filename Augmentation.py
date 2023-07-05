@@ -6,6 +6,7 @@ import os
 import argparse
 import glob
 from tqdm import tqdm
+import sys
 
 
 class Augmentation:
@@ -172,8 +173,13 @@ if __name__ == "__main__":
         description="Augment images in the dataset.")
     parser.add_argument("--path", type=str, default="data/images/Apple/apple_healthy/image (1).JPG",
                         help="Path to the image/directory to be augmented.")
-
     args = parser.parse_args()
+
+    try:
+        assert os.path.isdir(args.path) or os.path.isfile(args.path), "Invalid path."
+    except AssertionError as e:
+        print(e)
+        sys.exit(1)
 
     if os.path.isdir(args.path):
         images = Path(args.path).glob("**/*.JPG")
