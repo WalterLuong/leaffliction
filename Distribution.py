@@ -39,12 +39,12 @@ if __name__ == '__main__':
     fig1.tight_layout(pad=15.0)
     fig1.suptitle(Path(sys.argv[1]).stem + " class distribution")
 
-    # Pie ditribution
+    # Pie distribution
     ax1.pie(distribution, labels=classes,
             autopct='%1.1f%%', startangle=90, colors=colors)
     ax1.axis('equal')
 
-    # Histogramm distriibution
+    # Histogram distribution
     plt.bar(classes, height=distribution, color=colors, edgecolor='black')
     ax2.set_axisbelow(True)
     ax2.yaxis.grid(color='gray', linestyle='dashed')

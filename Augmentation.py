@@ -23,6 +23,9 @@ class Augmentation:
     8. Blur
     '''
 
+    def __init__(self):
+        pass
+
     def translation(self, img: np.ndarray) -> np.ndarray:
         '''
         Translate the image by a random number of pixels in the x and y direction.
