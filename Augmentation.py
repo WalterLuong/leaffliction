@@ -171,25 +171,26 @@ class Augmentation:
         return blurred_img
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Augment images in the dataset.")
-    parser.add_argument("--path", type=str, default="data/images/Apple/apple_healthy/image (1).JPG",
-                        help="Path to the image/directory to be augmented.")
+        description='Augment image(s) in the dataset. Augmentation applied: Translation, Flip, Rotate, Blur, Crop, Distortion. Images are saved in the "augmented_directory" folder.')
+    parser.add_argument('-p', '--path', type=str, default='data/images/Apple/apple_healthy/image (1).JPG',
+                        help='Path to the image/directory to be augmented.')
     args = parser.parse_args()
 
     try:
-        assert os.path.isdir(args.path) or os.path.isfile(args.path), "Invalid path."
+        assert os.path.isdir(args.path) or os.path.isfile(
+            args.path), 'Invalid path.'
     except AssertionError as e:
         print(e)
         sys.exit(1)
 
     if os.path.isdir(args.path):
-        images = Path(args.path).glob("**/*.JPG")
-        for image in tqdm(images, desc=f"Augmenting images in {args.path}", total=len(os.listdir(args.path))):
+        images = Path(args.path).glob('**/*.JPG')
+        for image in tqdm(images, desc=f'Augmenting images from {args.path}', total=len(os.listdir(args.path))):
             aug = Augmentation()
             img = cv2.imread(str(image))
-            save_path = Path("augmented_directory",
+            save_path = Path('augmented_directory',
                              image.parent.parent.stem, image.parent.stem)
             os.makedirs(save_path, exist_ok=True)
 
@@ -221,50 +222,50 @@ if __name__ == "__main__":
         img_name = Path(args.path).stem
 
         translated_img = aug.translation(img)
-        plt.imsave(img_name + "_Translation.JPG", translated_img)
+        plt.imsave(img_name + '_Translation.JPG', translated_img)
 
         flipped_img = aug.flip(img, axis=np.random.randint(0, 2))
-        plt.imsave(img_name + "_Flip.JPG", flipped_img)
+        plt.imsave(img_name + '_Flip.JPG', flipped_img)
 
         rotated_img = aug.rotate(img)
-        plt.imsave(img_name + "_Rotate.JPG", rotated_img)
+        plt.imsave(img_name + '_Rotate.JPG', rotated_img)
 
         blurred_img = aug.blur(img)
-        plt.imsave(img_name + "_Blur.JPG", blurred_img)
+        plt.imsave(img_name + '_Blur.JPG', blurred_img)
 
         cropped_img = aug.crop(img)
-        plt.imsave(img_name + "_Crop.JPG", cropped_img)
+        plt.imsave(img_name + '_Crop.JPG', cropped_img)
 
         distorted_img = aug.distortion(img)
-        plt.imsave(img_name + "_Distortion.JPG", distorted_img)
+        plt.imsave(img_name + '_Distortion.JPG', distorted_img)
 
         plt.figure(figsize=(20, 20))
         plt.subplot(1, 7, 1)
         plt.imshow(img)
-        plt.title("Original Image")
-        plt.axis("off")
+        plt.title('Original Image')
+        plt.axis('off')
         plt.subplot(1, 7, 2)
         plt.imshow(translated_img)
-        plt.title("Translated Image")
-        plt.axis("off")
+        plt.title('Translated Image')
+        plt.axis('off')
         plt.subplot(1, 7, 3)
         plt.imshow(flipped_img)
-        plt.title("Flipped Image")
-        plt.axis("off")
+        plt.title('Flipped Image')
+        plt.axis('off')
         plt.subplot(1, 7, 4)
         plt.imshow(rotated_img)
-        plt.title("Rotated Image")
-        plt.axis("off")
+        plt.title('Rotated Image')
+        plt.axis('off')
         plt.subplot(1, 7, 5)
         plt.imshow(blurred_img)
-        plt.title("Blurred Image")
-        plt.axis("off")
+        plt.title('Blurred Image')
+        plt.axis('off')
         plt.subplot(1, 7, 6)
         plt.imshow(cropped_img)
-        plt.title("Cropped Image")
-        plt.axis("off")
+        plt.title('Cropped Image')
+        plt.axis('off')
         plt.subplot(1, 7, 7)
         plt.imshow(distorted_img)
-        plt.title("Distorted Image")
-        plt.axis("off")
+        plt.title('Distorted Image')
+        plt.axis('off')
         plt.show()
