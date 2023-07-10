@@ -163,3 +163,4 @@ plot_hist(hist)
 # plot_hist(hist)
 
 # https://keras.io/examples/vision/image_classification_efficientnet_fine_tuning/
+# https://github.com/AarohiSingla/Image-Classification-Using-EfficientNets/tree/main
