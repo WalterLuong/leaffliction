@@ -1,24 +1,15 @@
-import matplotlib.pyplot as plt
-from keras.utils.vis_utils import plot_model
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.model_selection import train_test_split
-from keras.models import *
-from keras.optimizers import *
-from keras.losses import *
-from keras.layers import *
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-import keras_tuner as kt
-import numpy as np
-import tensorflow
-import keras
-import sklearn
-import os
-import sys
-import argparse
-import absl.logging
-absl.logging.set_verbosity(absl.logging.ERROR)
+from fastai.vision.all import *
+from pathlib import Path
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Train a model on a dataset')
-    parser.add_argument('--dataset', type=str, default='augmented_directory/Apple/', help='Path to dataset')
+plant = 'Grape'
+dataset_train_path = Path('data/images', plant)
+
+data = ImageDataLoaders.from_folder(
+    dataset_train_path, valid_pct=0.2, size=224, num_workers=4, bs=4)
+
+learn = vision_learner(data, models.vgg16_bn, metrics=accuracy)
+learn.model
+learn.fit(2)
+learn.save('stage-1')
+learn.export('export.pkl')
+learn.show_results()
