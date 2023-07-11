@@ -4,11 +4,11 @@ from pathlib import Path
 from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-from keras.models import load_model
-import keras.utils as image
-import numpy as np
+#from keras.models import load_model
+#import keras.utils as image
+#import numpy as np
 
-plant = 'Grape'
+plant = 'Apple'
 path = Path('data/valid', plant)
 
 y_true = []
@@ -37,42 +37,42 @@ def plot_confusion_matrix(y_true, y_pred):
     plt.show()
 
 
-# def predict_image(image_path):
-#     model = torch.load(f'data/models/{plant}/vgg16_1.h5')
-#     for image in tqdm(path.glob('**/*.JPG'), total=len(list(path.glob('**/*.JPG')))):
-#         pred_class, pred_idx, outputs = model.predict(image)
-#         y_true.append(image.parent.name)
-#         y_pred.append(pred_class)
-
-
 def predict_image(image_path):
-    model = load_model(f'data/models/{plant}/vgg16_1.h5')
-    model.compile(loss='binary_crossentropy',
-                optimizer='rmsprop',
-                metrics=['accuracy'])
-    img_width, img_height = 200, 200
-    # predicting images
-    img = image.load_img('data/valid/Grape/Grape_Esca/image (1).JPG', target_size=(img_width, img_height))
-    x = image.img_to_array(img)
-    x = np.expand_dims(x, axis=0)
+    model = torch.load(f'data/models/{plant}/export.pkl')
+    for image in tqdm(path.glob('**/*.JPG'), total=len(list(path.glob('**/*.JPG')))):
+        pred_class, pred_idx, outputs = model.predict(image)
+        y_true.append(image.parent.name)
+        y_pred.append(pred_class)
 
-    images = np.vstack([x])
-    classes = model.predict(images, batch_size=10)
-    print(classes)
 
-    # predicting multiple images at once
-    img = image.load_img('data/valid/Grape/Grape_healthy/image (2).JPG', target_size=(img_width, img_height))
-    y = image.img_to_array(img)
-    y = np.expand_dims(y, axis=0)
+#def predict_image(image_path):
+#    model = load_model(f'data/models/{plant}/{plant}_vgg16.h5')
+#    model.compile(loss='binary_crossentropy',
+#                optimizer='rmsprop',
+#                metrics=['accuracy'])
+#    img_width, img_height = 200, 200
+#    # predicting images
+#    img = image.load_img('data/valid/Grape/Grape_Esca/image (1).JPG', target_size=(img_width, img_height))
+#    x = image.img_to_array(img)
+#    x = np.expand_dims(x, axis=0)
 
-    # pass the list of multiple images np.vstack()
-    images = np.vstack([x, y])
-    classes = model.predict(images, batch_size=10)
+#    images = np.vstack([x])
+#    classes = model.predict(images, batch_size=10)
+#    print(classes)
 
-    # print the classes, the images belong to
-    print(classes)
-    print(classes[0])
-    print(classes[0][0])
+#    # predicting multiple images at once
+#    img = image.load_img('data/valid/Grape/Grape_healthy/image (2).JPG', target_size=(img_width, img_height))
+#    y = image.img_to_array(img)
+#    y = np.expand_dims(y, axis=0)
+
+#    # pass the list of multiple images np.vstack()
+#    images = np.vstack([x, y])
+#    classes = model.predict(images, batch_size=10)
+
+#    # print the classes, the images belong to
+#    print(classes)
+#    print(classes[0])
+#    print(classes[0][0])
 
 
 if __name__ == '__main__':

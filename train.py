@@ -1,4 +1,4 @@
-from fastai.vision.all import *
+from fastai.vision.all import ImageDataLoaders, accuracy, vision_learner, models
 from pathlib import Path
 
 plant = 'Grape'
