@@ -1,12 +1,12 @@
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, confusion_matrix
 import torch
 from pathlib import Path
-from sklearn.metrics import confusion_matrix
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-#from keras.models import load_model
-#import keras.utils as image
-#import numpy as np
+import os
+# from keras.models import load_model
+# import keras.utils as image
+# import numpy as np
 
 plant = 'Apple'
 path = Path('data/valid', plant)
@@ -38,14 +38,16 @@ def plot_confusion_matrix(y_true, y_pred):
 
 
 def predict_image(image_path):
-    model = torch.load(f'data/models/{plant}/export.pkl')
-    for image in tqdm(path.glob('**/*.JPG'), total=len(list(path.glob('**/*.JPG')))):
+    model = torch.load(f'data/models/{plant}/{plant}_vgg19.pkl')
+    images = list(path.glob('**/*.JPG'))
+    for index, image in enumerate(images):
         pred_class, pred_idx, outputs = model.predict(image)
         y_true.append(image.parent.name)
         y_pred.append(pred_class)
+        tqdm.write(f"Progress: {index}/{len(images)}")
 
 
-#def predict_image(image_path):
+# def predict_image(image_path):
 #    model = load_model(f'data/models/{plant}/{plant}_vgg16.h5')
 #    model.compile(loss='binary_crossentropy',
 #                optimizer='rmsprop',
@@ -73,7 +75,6 @@ def predict_image(image_path):
 #    print(classes)
 #    print(classes[0])
 #    print(classes[0][0])
-
 
 if __name__ == '__main__':
     predict_image(path)

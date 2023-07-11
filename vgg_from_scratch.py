@@ -1,11 +1,10 @@
 import tensorflow as tf
-from tf.keras.models import Model
-from tf.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense
-from tf.keras.callbacks import ModelCheckpoint, EarlyStopping
-from tf.keras.optimizers import Adam
-from tf.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
-from tf.keras.preprocessing.image import ImageDataGenerator
-from tf.keras.losses import SparseCategoricalCrossentropy
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -37,11 +36,13 @@ x = Conv2D(filters=64, kernel_size=(3, 3),
 x = Conv2D(filters=64, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
+
 x = Conv2D(filters=128, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = Conv2D(filters=128, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
+
 x = Conv2D(filters=256, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = Conv2D(filters=256, kernel_size=(3, 3),
@@ -49,6 +50,7 @@ x = Conv2D(filters=256, kernel_size=(3, 3),
 x = Conv2D(filters=256, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
+
 x = Conv2D(filters=512, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = Conv2D(filters=512, kernel_size=(3, 3),
@@ -56,6 +58,7 @@ x = Conv2D(filters=512, kernel_size=(3, 3),
 x = Conv2D(filters=512, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
+
 x = Conv2D(filters=512, kernel_size=(3, 3),
            padding="same", activation="relu")(x)
 x = Conv2D(filters=512, kernel_size=(3, 3),
@@ -67,13 +70,14 @@ x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
 x = Flatten()(x)
 x = Dense(units=4096, activation="relu")(x)
 x = Dense(units=4096, activation="relu")(x)
+x = Dense(units=1000, activation="relu")(x)
 outputs = Dense(units=4, activation="softmax")(x)
 
 model = Model(inputs=inputs, outputs=outputs)
 
 opt = Adam(learning_rate=1e-4)
 model.compile(optimizer=opt,
-              loss=SparseCategoricalCrossentropy, metrics=['accuracy'])
+              loss=tf.keras.losses.categorical_crossentropy, metrics=['accuracy'])
 
 model.summary()
 
