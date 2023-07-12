@@ -1,24 +1,73 @@
-import matplotlib.pyplot as plt
-from keras.utils.vis_utils import plot_model
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-from sklearn.model_selection import train_test_split
-from keras.models import *
-from keras.optimizers import *
-from keras.losses import *
-from keras.layers import *
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-import keras_tuner as kt
-import numpy as np
-import tensorflow
-import keras
-import sklearn
+from fastai.vision.all import ImageDataLoaders, accuracy, vision_learner, models
+from pathlib import Path
+import argparse
+from zipfile import ZipFile
 import os
 import sys
-import argparse
-import absl.logging
-absl.logging.set_verbosity(absl.logging.ERROR)
+import warnings
+import logging
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description='Train a model on a dataset')
-    parser.add_argument('--dataset', type=str, default='augmented_directory/Apple/', help='Path to dataset')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] in %(funcName)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore")
+
+
+def train_model(dataset_train_path: Path) -> None:
+    dataset_name = dataset_train_path.name
+
+    # MODIFY IMAGES HERE
+    data = ImageDataLoaders.from_folder(
+        dataset_train_path, valid_pct=0.2, size=224, num_workers=4, bs=4)
+
+    learn = vision_learner(data, models.vgg16_bn, metrics=accuracy)
+
+    #learn.fit(2)
+
+    if not os.path.isdir(Path('data', 'models', dataset_name)):
+        os.makedirs(Path('data', 'models', dataset_name))
+    learn.path = Path('data', 'models', dataset_name)
+    version = 1
+    model_to_save = ''
+    if os.path.isfile(Path(learn.path, f'{dataset_name}_vgg16.pkl')):
+        version = 1
+        while os.path.isfile(Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl')):
+            version += 1
+        model_to_save = f'{dataset_name}_vgg16_v{version}.pkl'
+        learn.export(Path(model_to_save))
+
+    with ZipFile(Path(learn.path, f'{dataset_name}_vgg16_v{version}.zip'), 'w') as zipObj:
+        # ZIP IMAGES HERE
+        logger.info(f'Zipping {dataset_name}_vgg16_v{version}.pkl')
+        print((Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl')))
+        zipObj.write(Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl'))
+        logger.info('Done')
+
+    learn.show_results()
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'path',
+        type=str,
+        default='augmented_directory/',
+        help='Path to image dataset to train the model on'
+    )
+    args = parser.parse_args()
+
+    try:
+        assert os.path.isdir(args.path), 'Invalid path.'
+        assert len(os.listdir(args.path)) > 0, 'Directory is empty.'
+        assert len(os.listdir(Path(args.path, os.listdir(
+            args.path)[0]))) > 0, 'Subdirectories are empty.'
+        assert len(list(Path(args.path).glob('**/*.JPG'))
+                   ) > 0, 'No image files found.'
+
+        train_model(Path(args.path))
+    except AssertionError as e:
+        logger.error(e)
+        sys.exit(1)

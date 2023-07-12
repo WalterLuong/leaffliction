@@ -13,18 +13,28 @@
 from pathlib import Path
 import sys
 import matplotlib.pyplot as plt
+import warnings
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] in %(funcName)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore")
 
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
-        print("Path folder is missing.")
+        logger.error("Path folder is missing.")
         exit(1)
-    pathname = Path("./data/images/", sys.argv[1])
+    pathname = Path(sys.argv[1])
 
     try:
         assert pathname.is_dir(), "Invalid path."
     except AssertionError as e:
-        print(e)
+        logger.error(e)
         sys.exit(1)
 
     # Data and labels
