@@ -19,7 +19,7 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         print("Path folder is missing.")
         exit(1)
-    pathname = Path("./data/images/", sys.argv[1])
+    pathname = Path(sys.argv[1])
 
     try:
         assert pathname.is_dir(), "Invalid path."

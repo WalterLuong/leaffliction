@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import os
 import argparse
-import glob
 from tqdm import tqdm
 import sys
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 
 class Augmentation:
@@ -171,10 +173,20 @@ class Augmentation:
         return blurred_img
 
 
+def augment(image: Path, save_path: Path, len_largest_directory: int, aug: Augmentation, augmentation_type: str) -> None:
+    logging.debug(
+        f'Number of images in {image.parent.stem}: {len(list(save_path.iterdir()))}')
+    logging.debug(
+        f'Number of images in largest directory: {len_largest_directory}')
+    aug_img = getattr(aug, augmentation_type)(cv2.imread(str(image)))
+    plt.imsave(
+        Path(save_path, f'{image.stem}_{augmentation_type}.JPG'), aug_img)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Augment image(s) in the dataset. Augmentation applied: Translation, Flip, Rotate, Blur, Crop, Distortion. Images are saved in the "augmented_directory" folder.')
-    parser.add_argument('-p', '--path', type=str, default='data/images/Apple/apple_healthy/image (1).JPG',
+    parser.add_argument('path', type=str, default='data/images/Apple/apple_healthy/image (1).JPG',
                         help='Path to the image/directory to be augmented.')
     args = parser.parse_args()
 
@@ -182,40 +194,64 @@ if __name__ == '__main__':
         assert os.path.isdir(args.path) or os.path.isfile(
             args.path), 'Invalid path.'
     except AssertionError as e:
-        print(e)
+        logging.error(e)
         sys.exit(1)
 
     if os.path.isdir(args.path):
         images = Path(args.path).glob('**/*.JPG')
-        for image in tqdm(images, desc=f'Augmenting images from {args.path}', total=len(os.listdir(args.path))):
-            aug = Augmentation()
-            img = cv2.imread(str(image))
-            save_path = Path('augmented_directory',
-                             image.parent.parent.stem, image.parent.stem)
+        for image in tqdm(images, desc=f'Copying images from {args.path} to augmented_directory', total=len(os.listdir(args.path))):
+            save_path = Path('augmented_directory', image.parent.stem)
             os.makedirs(save_path, exist_ok=True)
+            plt.imsave(Path(save_path, image.name), cv2.imread(str(image)))
 
-            plt.imsave(Path(save_path, image.name), img)
+        largest_directory = max(
+            Path('augmented_directory').iterdir(), key=lambda x: len(list(x.iterdir())))
+        len_largest_directory = len(list(largest_directory.iterdir()))
+        logging.debug(f'Largest directory: {largest_directory}')
+        logging.debug(
+            f'Number of images in largest directory: {len_largest_directory}')
 
-            translated_img = aug.translation(img)
-            plt.imsave(
-                Path(save_path, f'{image.stem}_Translation.JPG'), translated_img)
+        for image in tqdm(Path(args.path).iterdir(), desc=f'Augmenting images from {args.path}', total=len(os.listdir(args.path))):
+            images = image.glob('**/*.JPG')
+            for image in images:
+                aug = Augmentation()
+                img = cv2.imread(str(image))
+                save_path = Path('augmented_directory', image.parent.stem)
+                os.makedirs(save_path, exist_ok=True)
+                plt.imsave(Path(save_path, image.name), img)
 
-            flipped_img = aug.flip(img, axis=np.random.randint(0, 2))
-            plt.imsave(Path(save_path, f'{image.stem}_Flip.JPG'), flipped_img)
-
-            rotated_img = aug.rotate(img)
-            plt.imsave(
-                Path(save_path, f'{image.stem}_Rotate.JPG'), rotated_img)
-
-            blurred_img = aug.blur(img)
-            plt.imsave(Path(save_path, f'{image.stem}_Blur.JPG'), blurred_img)
-
-            cropped_img = aug.crop(img)
-            plt.imsave(Path(save_path, f'{image.stem}_Crop.JPG'), cropped_img)
-
-            distorted_img = aug.distortion(img)
-            plt.imsave(Path(save_path, f'{image.stem}_Distortion.JPG'),
-                       distorted_img)
+                # translate images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path, len_largest_directory,
+                            aug, 'translation')
+                # flip images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'flip')
+                # rotate images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'rotate')
+                # blur images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'blur')
+                # crop images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'crop')
+                # distort images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path, len_largest_directory,
+                            aug, 'distortion')
+                # shear images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'shear')
+                # skew images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'skew')
     else:
         aug = Augmentation()
         img = cv2.imread(args.path)
