@@ -7,18 +7,14 @@ import warnings
 from zipfile import ZipFile
 import logging
 
-logging.basicConfig(level=logging.INFO)
-
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
 
 def train_model(dataset_train_path: Path) -> None:
-    plant = dataset_train_path.name
-    try:
-        assert plant in ['Apple', 'Grape'], 'Invalid path.'
-    except AssertionError as e:
-        logging.error(e)
-        sys.exit(1)
+    dataset_name = dataset_train_path.name
 
     # MODIFY IMAGES HERE
     data = ImageDataLoaders.from_folder(
@@ -26,23 +22,25 @@ def train_model(dataset_train_path: Path) -> None:
 
     learn = vision_learner(data, models.vgg16_bn, metrics=accuracy)
 
-    # learn.fit(2)
+    learn.fit(2)
 
-    if not os.path.isdir(Path('data', 'models', plant)):
-        os.makedirs(Path('data', 'models', plant))
-    learn.path = Path('data', 'models', plant)
-    if os.path.isfile(Path(learn.path, f'{plant}_vgg16.pkl')):
+    if not os.path.isdir(Path('data', 'models', dataset_name)):
+        os.makedirs(Path('data', 'models', dataset_name))
+    learn.path = Path('data', 'models', dataset_name)
+    version = 1
+    model_to_save = ''
+    if os.path.isfile(Path(learn.path, f'{dataset_name}_vgg16.pkl')):
         version = 1
-        while os.path.isfile(Path(learn.path, f'{plant}_vgg16_v{version}.pkl')):
+        while os.path.isfile(Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl')):
             version += 1
-        model_to_save = f'{plant}_vgg16_v{version}.pkl'
+        model_to_save = f'{dataset_name}_vgg16_v{version}.pkl'
         learn.export(Path(model_to_save))
 
-    with ZipFile(Path(learn.path, f'{plant}_vgg16_v{version}.zip'), 'w') as zipObj:
+    with ZipFile(Path(learn.path, f'{dataset_name}_vgg16_v{version}.zip'), 'w') as zipObj:
         # ZIP IMAGES HERE
-        logging.info(f'Zipping {plant}_vgg16_v{version}.pkl')
-        zipObj.write(Path(learn.path, f'{plant}_vgg16_v{version}.pkl'))
-        logging.info('Done')
+        logger.info(f'Zipping {dataset_name}_vgg16_v{version}.pkl')
+        zipObj.write(Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl'))
+        logger.info('Done')
 
     learn.show_results()
 
@@ -52,7 +50,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'path',
         type=str,
-        default='data/images/Apple/',
+        default='augmented_directory/',
         help='Path to image dataset to train the model on'
     )
     args = parser.parse_args()
@@ -65,11 +63,11 @@ if __name__ == '__main__':
         assert len(list(Path(args.path).glob('**/*.JPG'))
                    ) > 0, 'No image files found.'
     except AssertionError as e:
-        logging.error(e)
+        logger.error(e)
         sys.exit(1)
 
     try:
         train_model(Path(args.path))
     except Exception as e:
-        logging.error(e)
+        logger.error(e)
         sys.exit(1)

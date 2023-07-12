@@ -6,9 +6,13 @@ import os
 import argparse
 from tqdm import tqdm
 import sys
+import warnings
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore")
 
 
 class Augmentation:
@@ -174,13 +178,14 @@ class Augmentation:
 
 
 def augment(image: Path, save_path: Path, len_largest_directory: int, aug: Augmentation, augmentation_type: str) -> None:
-    logging.debug(
+    logger.debug(
         f'Number of images in {image.parent.stem}: {len(list(save_path.iterdir()))}')
-    logging.debug(
+    logger.debug(
         f'Number of images in largest directory: {len_largest_directory}')
     aug_img = getattr(aug, augmentation_type)(cv2.imread(str(image)))
+    aug_img = cv2.resize(aug_img, (256, 256))
     plt.imsave(
-        Path(save_path, f'{image.stem}_{augmentation_type}.JPG'), aug_img)
+        Path(save_path, f'{image.stem}_{augmentation_type.title()}.JPG'), aug_img)
 
 
 if __name__ == '__main__':
@@ -194,7 +199,7 @@ if __name__ == '__main__':
         assert os.path.isdir(args.path) or os.path.isfile(
             args.path), 'Invalid path.'
     except AssertionError as e:
-        logging.error(e)
+        logger.error(e)
         sys.exit(1)
 
     if os.path.isdir(args.path):
@@ -207,8 +212,8 @@ if __name__ == '__main__':
         largest_directory = max(
             Path('augmented_directory').iterdir(), key=lambda x: len(list(x.iterdir())))
         len_largest_directory = len(list(largest_directory.iterdir()))
-        logging.debug(f'Largest directory: {largest_directory}')
-        logging.debug(
+        logger.debug(f'Largest directory: {largest_directory}')
+        logger.debug(
             f'Number of images in largest directory: {len_largest_directory}')
 
         for image in tqdm(Path(args.path).iterdir(), desc=f'Augmenting images from {args.path}', total=len(os.listdir(args.path))):

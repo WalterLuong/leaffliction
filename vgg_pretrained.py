@@ -30,7 +30,7 @@ for layer in vgg.layers:
     layer.trainable = False
 
 x = Flatten()(vgg.output)
-outputs = Dense(4, activation='softmax')(x)
+outputs = Dense(8, activation='softmax')(x)
 model = Model(inputs=vgg.input, outputs=outputs)
 
 opt = Adam(learning_rate=1e-4)

@@ -7,6 +7,13 @@ from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from pathlib import Path
 import matplotlib.pyplot as plt
+import warnings
+import logging
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore")
 
 
 # GPU memory management
@@ -71,7 +78,7 @@ x = Flatten()(x)
 x = Dense(units=4096, activation="relu")(x)
 x = Dense(units=4096, activation="relu")(x)
 x = Dense(units=1000, activation="relu")(x)
-outputs = Dense(units=4, activation="softmax")(x)
+outputs = Dense(units=8, activation="softmax")(x)
 
 model = Model(inputs=inputs, outputs=outputs)
 
