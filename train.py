@@ -1,14 +1,17 @@
 from fastai.vision.all import ImageDataLoaders, accuracy, vision_learner, models
 from pathlib import Path
 import argparse
+from zipfile import ZipFile
 import os
 import sys
 import warnings
-from zipfile import ZipFile
 import logging
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] in %(funcName)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
@@ -22,7 +25,7 @@ def train_model(dataset_train_path: Path) -> None:
 
     learn = vision_learner(data, models.vgg16_bn, metrics=accuracy)
 
-    learn.fit(2)
+    #learn.fit(2)
 
     if not os.path.isdir(Path('data', 'models', dataset_name)):
         os.makedirs(Path('data', 'models', dataset_name))
@@ -39,6 +42,7 @@ def train_model(dataset_train_path: Path) -> None:
     with ZipFile(Path(learn.path, f'{dataset_name}_vgg16_v{version}.zip'), 'w') as zipObj:
         # ZIP IMAGES HERE
         logger.info(f'Zipping {dataset_name}_vgg16_v{version}.pkl')
+        print((Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl')))
         zipObj.write(Path(learn.path, f'{dataset_name}_vgg16_v{version}.pkl'))
         logger.info('Done')
 
@@ -62,12 +66,8 @@ if __name__ == '__main__':
             args.path)[0]))) > 0, 'Subdirectories are empty.'
         assert len(list(Path(args.path).glob('**/*.JPG'))
                    ) > 0, 'No image files found.'
-    except AssertionError as e:
-        logger.error(e)
-        sys.exit(1)
 
-    try:
         train_model(Path(args.path))
-    except Exception as e:
+    except AssertionError as e:
         logger.error(e)
         sys.exit(1)
