@@ -12,12 +12,16 @@ import logging
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] in %(funcName)s - %(message)s',
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] \
+        in %(funcName)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
 
+
+SOTA_MODEL = Path(
+    'data/zipped_files/vgg19_SOTA/vgg19_SOTA.pkl')
 
 y_true = []
 y_pred = []
@@ -25,12 +29,22 @@ y_pred = []
 
 def unzip_model(
     model_path: Path = Path(
-        'data/zipped_files/augmented_directory_vgg16_v1.zip')
+        'data/zipped_files/test.zip')
 ) -> Path:
-    with ZipFile(model_path, 'r') as zipObj:
+    if not model_path.exists():
+        raise FileNotFoundError('Model does not exist.')
+    try:
         logger.info(f'Unzipping {model_path.name}')
-        zipObj.extractall(Path(model_path).parent)
-        logger.info('Done')
+        extract_dir = Path(model_path.parent, model_path.stem)
+        if not os.path.isdir(extract_dir):
+            os.mkdir(extract_dir)
+        with ZipFile(model_path, 'r') as zipObj:
+            zipObj.extractall(extract_dir)
+        logger.info('Unzipping done')
+        return (Path(extract_dir, 'test.pkl'))
+    except Exception as e:
+        logger.error('Error unzipping model.')
+        raise e
 
 
 def print_prediction(
@@ -61,16 +75,15 @@ def plot_confusion_matrix(y_true: list, y_pred: list) -> None:
     plt.show()
 
 
-def predict_image(image_path: Path) -> None:
-    model = torch.load('data/zipped_files/vgg19_3.pkl')
+def predict_image(
+    model_path: Path = 'data/zipped_files/test/test.pkl',
+    image_path: Path = 'data/valid/'
+) -> None:
+    model = torch.load(model_path)
     if image_path.is_dir():
         images = list(image_path.glob('**/*.JPG'))
-        try:
-            if not len(images) > 0:
-                raise FileNotFoundError('No image files found.')
-        except FileNotFoundError as e:
-            logger.error(e)
-            sys.exit(1)
+        if not len(images) > 0:
+            raise FileNotFoundError('No image files found.')
 
         for index, image in enumerate(images):
             true_class = image.parent.name
@@ -83,17 +96,16 @@ def predict_image(image_path: Path) -> None:
         plot_confusion_matrix(y_true, y_pred)
 
     else:
-        try:
-            if not image_path.suffix == '.JPG':
-                raise FileNotFoundError('Image is not a JPG')
-        except FileNotFoundError as e:
-            logger.error(e)
-            sys.exit(1)
+        if not image_path.suffix == '.JPG':
+            raise FileNotFoundError('File is not a JPG')
 
         pred_class, pred_idx, outputs = model.predict(image_path)
         y_true.append(image_path.parent.name)
         y_pred.append(pred_class)
         print_prediction(pred_class, pred_idx, outputs, image_path.parent.name)
+        plt.imshow(plt.imread(image_path))
+        plt.title(f'Prediction: {pred_class}')
+        plt.show()
 
 
 if __name__ == '__main__':
@@ -101,7 +113,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'path',
         type=str,
-        default=Path('data/valid/Apple'),
+        default=Path('data/valid/'),
         help='Path to image/dataset to test the model on'
     )
     args = parser.parse_args()
@@ -110,8 +122,8 @@ if __name__ == '__main__':
         if not Path(args.path).exists():
             raise FileNotFoundError('Path does not exist.')
 
-        # unzip_model()
-        predict_image(Path(args.path))
     except Exception as e:
         logger.error(e)
         sys.exit(1)
+    model_path = unzip_model() if not SOTA_MODEL.exists() else SOTA_MODEL
+    predict_image(model_path, Path(args.path))

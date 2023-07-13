@@ -11,7 +11,8 @@ import logging
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] in %(funcName)s - %(message)s',
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] \
+        in %(funcName)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ class Augmentation:
 
     def translation(self, img: np.ndarray) -> np.ndarray:
         '''
-        Translate the image by a random number of pixels in the x and y direction.
+        Translate the image by a random number of pixels
+        in the x and y direction.
 
         Args:
             img (np.ndarray): The image to be translated.
@@ -56,11 +58,13 @@ class Augmentation:
 
     def shear(self, img, axis=0) -> np.ndarray:
         '''
-        Shear the image by a random number of pixels in the x and y direction.
+        Shear the image by a random number of pixels
+        in the x and y direction.
 
         Args:
             img (np.ndarray): The image to be sheared.
-            axis (int, optional): The axis along which the image is to be sheared. Defaults to 0.
+            axis (int, optional): The axis along which the image
+                                    is to be sheared. Defaults to 0.
 
         Returns:
             sheared_img (np.ndarray): The sheared image.
@@ -84,7 +88,8 @@ class Augmentation:
 
         Args:
             img (np.ndarray): The image to be flipped.
-            axis (int, optional): The axis along which the image is to be flipped. Defaults to 0.
+            axis (int, optional): The axis along which the image
+                                    is to be flipped. Defaults to 0.
 
         Returns:
             reflected_img (np.ndarray): The flipped image.
@@ -146,8 +151,11 @@ class Augmentation:
         '''
         rows, cols, dim = img.shape
         pts1 = np.float32([[0, 0], [cols-1, 0], [0, rows-1]])
-        pts2 = np.float32([[np.random.randint(0, 30), np.random.randint(0, 30)], [cols-np.random.randint(
-            0, 30), np.random.randint(0, 30)], [np.random.randint(0, 30), rows-np.random.randint(0, 30)]])
+        pts2 = np.float32(
+            [[np.random.randint(0, 30), np.random.randint(0, 30)],
+             [cols-np.random.randint(0, 30), np.random.randint(0, 30)],
+             [np.random.randint(0, 30), rows-np.random.randint(0, 30)]]
+        )
         M = cv2.getAffineTransform(pts1, pts2)
         skewed_img = cv2.warpAffine(img, M, (cols, rows))
         skewed_img = skewed_img[50:150, 50:150]
@@ -155,7 +163,8 @@ class Augmentation:
 
     def distortion(self, img: np.ndarray) -> np.ndarray:
         '''
-        Distort the image by a random number of pixels in the x and y direction.
+        Distort the image by a random number of pixels
+        in the x and y direction.
 
         Args:
             img (np.ndarray): The image to be distorted.
@@ -165,8 +174,12 @@ class Augmentation:
         '''
         rows, cols, dim = img.shape
         pts1 = np.float32([[0, 0], [cols-1, 0], [0, rows-1], [cols-1, rows-1]])
-        pts2 = np.float32([[np.random.randint(0, 30), np.random.randint(0, 30)], [cols-np.random.randint(
-            0, 30), np.random.randint(0, 30)], [np.random.randint(0, 30), rows-np.random.randint(0, 30)], [cols-np.random.randint(0, 30), rows-np.random.randint(0, 30)]])
+        pts2 = np.float32(
+            [[np.random.randint(0, 30), np.random.randint(0, 30)],
+             [cols-np.random.randint(0, 30), np.random.randint(0, 30)],
+             [np.random.randint(0, 30), rows-np.random.randint(0, 30)],
+             [cols-np.random.randint(0, 30), rows-np.random.randint(0, 30)]]
+        )
         M = cv2.getPerspectiveTransform(pts1, pts2)
         distorted_img = cv2.warpPerspective(img, M, (cols, rows))
         distorted_img = distorted_img[50:150, 50:150]
@@ -200,22 +213,39 @@ class Augmentation:
         return contrast_img
 
 
-def augment(image: Path, save_path: Path, len_largest_directory: int, aug: Augmentation, augmentation_type: str) -> None:
+def augment(
+    image: Path,
+    save_path: Path,
+    len_largest_directory: int,
+    aug: Augmentation, augmentation_type: str
+) -> None:
     logger.debug(
-        f'Number of images in {image.parent.stem}: {len(list(save_path.iterdir()))}')
+        f'Number of images in {image.parent.stem}: \
+            {len(list(save_path.iterdir()))}')
     logger.debug(
         f'Number of images in largest directory: {len_largest_directory}')
     aug_img = getattr(aug, augmentation_type)(cv2.imread(str(image)))
     aug_img = cv2.resize(aug_img, (256, 256))
     plt.imsave(
-        Path(save_path, f'{image.stem}_{augmentation_type.title()}.JPG'), aug_img)
+        Path(
+            save_path,
+            f'{image.stem}_{augmentation_type.title()}.JPG'),
+        aug_img
+    )
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Augment image(s) in the dataset. Augmentation applied: Translation, Flip, Rotate, Blur, Crop, Distortion. Images are saved in the "augmented_directory" folder.')
-    parser.add_argument('path', type=str, default='data/images/Apple/apple_healthy/image (1).JPG',
-                        help='Path to the image/directory to be augmented.')
+        description='Augment image(s) in the dataset. Augmentation applied: \
+                        Translation, Flip, Rotate, Blur, Crop, Distortion. \
+                        Images are saved in the "augmented_directory" folder.'
+    )
+    parser.add_argument(
+        'path',
+        type=str,
+        default='data/images/Apple/apple_healthy/image (1).JPG',
+        help='Path to the image/directory to be augmented.'
+    )
     args = parser.parse_args()
 
     try:
@@ -227,19 +257,27 @@ if __name__ == '__main__':
 
     if os.path.isdir(args.path):
         images = Path(args.path).glob('**/*.JPG')
-        for image in tqdm(images, desc=f'Copying images from {args.path} to augmented_directory', total=len(os.listdir(args.path))):
+        for image in tqdm(images, desc=f'Copying images from {args.path} \
+                to augmented_directory', total=len(os.listdir(args.path))):
             save_path = Path('augmented_directory', image.parent.stem)
             os.makedirs(save_path, exist_ok=True)
             plt.imsave(Path(save_path, image.name), cv2.imread(str(image)))
 
         largest_directory = max(
-            Path('augmented_directory').iterdir(), key=lambda x: len(list(x.iterdir())))
+            Path(
+                'augmented_directory').iterdir(),
+            key=lambda x: len(list(x.iterdir()))
+        )
         len_largest_directory = len(list(largest_directory.iterdir()))
         logger.debug(f'Largest directory: {largest_directory}')
         logger.debug(
             f'Number of images in largest directory: {len_largest_directory}')
 
-        for image in tqdm(Path(args.path).iterdir(), desc=f'Augmenting images from {args.path}', total=len(os.listdir(args.path))):
+        for image in tqdm(
+            Path(args.path).iterdir(),
+            desc=f'Augmenting images from {args.path}',
+            total=len(os.listdir(args.path))
+        ):
             images = image.glob('**/*.JPG')
             for image in images:
                 aug = Augmentation()
