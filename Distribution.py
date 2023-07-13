@@ -32,8 +32,9 @@ if __name__ == '__main__':
     pathname = Path(sys.argv[1])
 
     try:
-        assert pathname.is_dir(), "Invalid path."
-    except AssertionError as e:
+        if not pathname.is_dir():
+            raise Exception("Path is not a directory.")
+    except Exception as e:
         logger.error(e)
         sys.exit(1)
 

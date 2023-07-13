@@ -62,28 +62,31 @@ def plot_confusion_matrix(y_true: list, y_pred: list) -> None:
 
 
 def predict_image(image_path: Path) -> None:
-    model = torch.load('data/zipped_files/augmented_directory_vgg16_v1.pkl')
+    model = torch.load('data/zipped_files/vgg19_3.pkl')
     if image_path.is_dir():
         images = list(image_path.glob('**/*.JPG'))
         try:
-            assert len(images) > 0, 'No images found'
-        except AssertionError as e:
+            if not len(images) > 0:
+                raise FileNotFoundError('No image files found.')
+        except FileNotFoundError as e:
             logger.error(e)
             sys.exit(1)
 
         for index, image in enumerate(images):
+            true_class = image.parent.name
             pred_class, pred_idx, outputs = model.predict(image)
-            y_true.append(image.parent.name)
+            y_true.append(true_class)
             y_pred.append(pred_class)
             tqdm.write(f"Progress: {index}/{len(images)}")
-            print_prediction(pred_class, pred_idx, outputs, image.parent.name)
+            print_prediction(pred_class, pred_idx, outputs, true_class)
         print(classification_report(y_true, y_pred))
         plot_confusion_matrix(y_true, y_pred)
 
     else:
         try:
-            assert image_path.suffix == '.JPG', 'Not a JPG file'
-        except AssertionError as e:
+            if not image_path.suffix == '.JPG':
+                raise FileNotFoundError('Image is not a JPG')
+        except FileNotFoundError as e:
             logger.error(e)
             sys.exit(1)
 
@@ -104,8 +107,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
-        assert Path(args.path).exists(), 'Path does not exist'
-        unzip_model()
+        if not Path(args.path).exists():
+            raise FileNotFoundError('Path does not exist.')
+
+        # unzip_model()
         predict_image(Path(args.path))
     except Exception as e:
         logger.error(e)

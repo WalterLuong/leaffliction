@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 class Augmentation:
     '''
     This class is used to augment the images in the dataset.
-    Eight (8) different types of augmentation are used:
+    Nine (9) different types of augmentation are used:
     1. Translation
     2. Shear
     3. Flip
@@ -30,6 +30,7 @@ class Augmentation:
     6. Skew
     7. Distortion
     8. Blur
+    9. Contrast
     '''
 
     def __init__(self):
@@ -50,6 +51,7 @@ class Augmentation:
                         [0, 1, np.random.randint(-100, 100)],
                         [0, 0, 1]])
         translated_img = cv2.warpPerspective(img, M, (cols, rows))
+        translated_img = translated_img[50:150, 50:150]
         return translated_img
 
     def shear(self, img, axis=0) -> np.ndarray:
@@ -65,14 +67,15 @@ class Augmentation:
         '''
         rows, cols, dim = img.shape
         if axis == 0:
-            M = np.float32([[1, np.random.uniform(0.1, 0.5), 0],
+            M = np.float32([[1, np.random.uniform(0.1, 0.2), 0],
                             [0, 1, 0],
                             [0, 0, 1]])
         else:
             M = np.float32([[1, 0, 0],
-                            [np.random.uniform(0.1, 0.5), 1, 0],
+                            [np.random.uniform(0.1, 0.2), 1, 0],
                             [0, 0, 1]])
         sheared_img = cv2.warpPerspective(img, M, (cols, rows))
+        sheared_img = sheared_img[50:150, 50:150]
         return sheared_img
 
     def flip(self, img: np.ndarray, axis: int = 0) -> np.ndarray:
@@ -112,6 +115,7 @@ class Augmentation:
         M = cv2.getRotationMatrix2D(
             (cols/2, rows/2), np.random.randint(-180, 180), 1)
         rotated_img = cv2.warpAffine(img, M, (cols, rows))
+        rotated_img = rotated_img[50:150, 50:150]
         return rotated_img
 
     def crop(self, img: np.ndarray) -> np.ndarray:
@@ -142,10 +146,11 @@ class Augmentation:
         '''
         rows, cols, dim = img.shape
         pts1 = np.float32([[0, 0], [cols-1, 0], [0, rows-1]])
-        pts2 = np.float32([[np.random.randint(0, 100), np.random.randint(0, 100)], [cols-np.random.randint(
-            0, 100), np.random.randint(0, 100)], [np.random.randint(0, 100), rows-np.random.randint(0, 100)]])
+        pts2 = np.float32([[np.random.randint(0, 30), np.random.randint(0, 30)], [cols-np.random.randint(
+            0, 30), np.random.randint(0, 30)], [np.random.randint(0, 30), rows-np.random.randint(0, 30)]])
         M = cv2.getAffineTransform(pts1, pts2)
         skewed_img = cv2.warpAffine(img, M, (cols, rows))
+        skewed_img = skewed_img[50:150, 50:150]
         return skewed_img
 
     def distortion(self, img: np.ndarray) -> np.ndarray:
@@ -160,10 +165,11 @@ class Augmentation:
         '''
         rows, cols, dim = img.shape
         pts1 = np.float32([[0, 0], [cols-1, 0], [0, rows-1], [cols-1, rows-1]])
-        pts2 = np.float32([[np.random.randint(0, 100), np.random.randint(0, 100)], [cols-np.random.randint(
-            0, 100), np.random.randint(0, 100)], [np.random.randint(0, 100), rows-np.random.randint(0, 100)], [cols-np.random.randint(0, 100), rows-np.random.randint(0, 100)]])
+        pts2 = np.float32([[np.random.randint(0, 30), np.random.randint(0, 30)], [cols-np.random.randint(
+            0, 30), np.random.randint(0, 30)], [np.random.randint(0, 30), rows-np.random.randint(0, 30)], [cols-np.random.randint(0, 30), rows-np.random.randint(0, 30)]])
         M = cv2.getPerspectiveTransform(pts1, pts2)
         distorted_img = cv2.warpPerspective(img, M, (cols, rows))
+        distorted_img = distorted_img[50:150, 50:150]
         return distorted_img
 
     def blur(self, img: np.ndarray) -> np.ndarray:
@@ -178,6 +184,20 @@ class Augmentation:
         '''
         blurred_img = cv2.blur(img, (5, 5), 0)
         return blurred_img
+
+    def contrast(self, img: np.ndarray) -> np.ndarray:
+        '''
+        Change the contrast of the image.
+
+        Args:
+            img (np.ndarray): The image whose contrast is to be changed.
+
+        Returns:
+            contrast_img (np.ndarray): The image with changed contrast.
+        '''
+        contrast_img = cv2.addWeighted(
+            img, 2, np.zeros(img.shape, img.dtype), 0, -50)
+        return contrast_img
 
 
 def augment(image: Path, save_path: Path, len_largest_directory: int, aug: Augmentation, augmentation_type: str) -> None:
@@ -199,9 +219,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     try:
-        assert os.path.isdir(args.path) or os.path.isfile(
-            args.path), 'Invalid path.'
-    except AssertionError as e:
+        if not os.path.isdir(args.path) and not os.path.isfile(args.path):
+            raise FileNotFoundError('Path not found.')
+    except Exception as e:
         logger.error(e)
         sys.exit(1)
 
@@ -228,10 +248,6 @@ if __name__ == '__main__':
                 os.makedirs(save_path, exist_ok=True)
                 plt.imsave(Path(save_path, image.name), img)
 
-                # translate images
-                if len(list(save_path.iterdir())) < len_largest_directory:
-                    augment(image, save_path, len_largest_directory,
-                            aug, 'translation')
                 # flip images
                 if len(list(save_path.iterdir())) < len_largest_directory:
                     augment(image, save_path,
@@ -260,6 +276,10 @@ if __name__ == '__main__':
                 if len(list(save_path.iterdir())) < len_largest_directory:
                     augment(image, save_path,
                             len_largest_directory, aug, 'skew')
+                # contrast images
+                if len(list(save_path.iterdir())) < len_largest_directory:
+                    augment(image, save_path,
+                            len_largest_directory, aug, 'contrast')
     else:
         aug = Augmentation()
         img = cv2.imread(args.path)
@@ -280,8 +300,8 @@ if __name__ == '__main__':
         cropped_img = aug.crop(img)
         plt.imsave(img_name + '_Crop.JPG', cropped_img)
 
-        distorted_img = aug.distortion(img)
-        plt.imsave(img_name + '_Distortion.JPG', distorted_img)
+        contrast_img = aug.contrast(img)
+        plt.imsave(img_name + '_Contrast.JPG', contrast_img)
 
         plt.figure(figsize=(20, 20))
         plt.subplot(1, 7, 1)
@@ -309,7 +329,7 @@ if __name__ == '__main__':
         plt.title('Cropped Image')
         plt.axis('off')
         plt.subplot(1, 7, 7)
-        plt.imshow(distorted_img)
-        plt.title('Distorted Image')
+        plt.imshow(contrast_img)
+        plt.title('Contrasted Image')
         plt.axis('off')
         plt.show()
