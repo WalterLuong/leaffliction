@@ -9,6 +9,7 @@ import os
 import sys
 import warnings
 import logging
+from Augmentation import Augmentation, cv2
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,8 +104,16 @@ def predict_image(
         y_true.append(image_path.parent.name)
         y_pred.append(pred_class)
         print_prediction(pred_class, pred_idx, outputs, image_path.parent.name)
-        plt.imshow(plt.imread(image_path))
-        plt.title(f'Prediction: {pred_class}')
+        aug = Augmentation()
+        img = cv2.imread(str(image_path))
+        aug_img = aug.contrast(img)
+        plt.subplot(1, 2, 1)
+        plt.imshow(img)
+        plt.title('Original Image')
+        plt.subplot(1, 2, 2)
+        plt.imshow(aug_img)
+        plt.title('Augmented Image')
+        plt.suptitle(f'Class predicted: {pred_class}')
         plt.show()
 
 

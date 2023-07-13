@@ -3,7 +3,6 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Dense, Conv2D, MaxPool2D, Flatten
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -12,7 +11,8 @@ import logging
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] in %(funcName)s - %(message)s',
+    format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] \
+        in %(funcName)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
@@ -86,21 +86,40 @@ outputs = Dense(units=8, activation="softmax")(x)
 model = Model(inputs=inputs, outputs=outputs)
 
 opt = Adam(learning_rate=1e-4)
-model.compile(optimizer=opt,
-              loss=tf.keras.losses.categorical_crossentropy, metrics=['accuracy'])
+model.compile(
+    optimizer=opt,
+    loss=tf.keras.losses.categorical_crossentropy,
+    metrics=['accuracy']
+)
 
 model.summary()
 
 
 # Train
-checkpoint = ModelCheckpoint(f'{plant}_vgg16.h5', monitor='val_accuracy', verbose=1,
-                             save_best_only=True, mode='max', save_freq=1)
-early_stopping = EarlyStopping(monitor='val_accuracy',
-                               patience=20, verbose=1, mode='max')
+checkpoint = ModelCheckpoint(
+    f'{plant}_vgg16.h5',
+    monitor='val_accuracy',
+    verbose=1,
+    save_best_only=True,
+    mode='max',
+    save_freq=1
+)
+early_stopping = EarlyStopping(
+    monitor='val_accuracy',
+    patience=20,
+    verbose=1,
+    mode='max'
+)
 callbacks = [checkpoint, early_stopping]
 
-hist = model.fit(traindata, batch_size=2, steps_per_epoch=10, epochs=100,
-                 verbose=1, callbacks=callbacks)
+hist = model.fit(
+    traindata,
+    batch_size=2,
+    steps_per_epoch=10,
+    epochs=100,
+    verbose=1,
+    callbacks=callbacks
+)
 
 
 # Plot
