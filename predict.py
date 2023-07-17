@@ -30,7 +30,7 @@ y_pred = []
 
 def unzip_model(
     model_path: Path = Path(
-        'data/zipped_files/test.zip')
+        'data/zipped_files/vgg19_SOTA.zip')
 ) -> Path:
     if not model_path.exists():
         raise FileNotFoundError('Model does not exist.')
@@ -42,7 +42,7 @@ def unzip_model(
         with ZipFile(model_path, 'r') as zipObj:
             zipObj.extractall(extract_dir)
         logger.info('Unzipping done')
-        return (Path(extract_dir, 'test.pkl'))
+        return (Path(extract_dir, 'vgg19_SOTA.pkl'))
     except Exception as e:
         logger.error('Error unzipping model.')
         raise e
@@ -77,7 +77,7 @@ def plot_confusion_matrix(y_true: list, y_pred: list) -> None:
 
 
 def predict_image(
-    model_path: Path = 'data/zipped_files/test/test.pkl',
+    model_path: Path = 'data/zipped_files/vgg19_SOTA.pkl',
     image_path: Path = 'data/valid/'
 ) -> None:
     model = torch.load(model_path)
@@ -101,8 +101,6 @@ def predict_image(
             raise FileNotFoundError('File is not a JPG')
 
         pred_class, pred_idx, outputs = model.predict(image_path)
-        y_true.append(image_path.parent.name)
-        y_pred.append(pred_class)
         print_prediction(pred_class, pred_idx, outputs, image_path.parent.name)
         aug = Augmentation()
         img = cv2.imread(str(image_path))
