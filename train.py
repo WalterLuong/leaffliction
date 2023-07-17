@@ -47,28 +47,18 @@ def train_model(dataset_train_path: Path) -> str:
 
     try:
         logger.info('Saving model')
-        if not os.path.isdir(Path('data', 'models', dataset_name)):
-            os.makedirs(Path('data', 'models', dataset_name))
         learn.path = Path('data', 'models', dataset_name)
+        if not os.path.isdir(learn.path):
+            os.makedirs(Path(learn.path))
         version = 1
-        model_to_save = ''
-        if os.path.isfile(
+        while os.path.isfile(
             Path(
                 learn.path,
                 f'{dataset_name}_vgg19_v{version}.pkl')
         ):
-            version = 1
-            while os.path.isfile(
-                Path(
-                    learn.path,
-                    f'{dataset_name}_vgg19_v{version}.pkl')
-            ):
-                version += 1
-            model_to_save = f'{dataset_name}_vgg19_v{version}.pkl'
-            learn.export(Path(model_to_save))
-        else:
-            model_to_save = f'{dataset_name}_vgg19_v{version}.pkl'
-            learn.export(Path(model_to_save))
+            version += 1
+        model_to_save = f'{dataset_name}_vgg19_v{version}.pkl'
+        learn.export(Path(model_to_save))
         logger.info('Saving done')
         return Path(model_to_save)
     except Exception as e:
