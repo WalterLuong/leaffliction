@@ -41,7 +41,7 @@ def unzip_model(
             os.mkdir(extract_dir)
         with ZipFile(model_path, 'r') as zipObj:
             zipObj.extractall(extract_dir)
-        logger.info('Unzipping done')
+        logger.info('Success')
         return (Path(extract_dir, 'vgg19_SOTA.pkl'))
     except Exception as e:
         logger.error('Error unzipping model.')
@@ -49,12 +49,14 @@ def unzip_model(
 
 
 def print_prediction(
+    image_path: Path,
     pred_class: str,
     pred_idx: int,
     outputs: torch.Tensor,
     truth: str
 ) -> None:
     print('---------------------------')
+    print(f'Image name: {image_path.stem}')
     print('Prediction: ', pred_class)
     print('Probability: ', outputs[pred_idx].item())
     print('Truth: ', truth)
@@ -77,14 +79,15 @@ def plot_confusion_matrix(y_true: list, y_pred: list) -> None:
 
 
 def predict_image(
-    model_path: Path = 'data/zipped_files/vgg19_SOTA.pkl',
-    image_path: Path = 'data/valid/'
+    model_path: Path = Path('data/zipped_files/vgg19_SOTA.pkl'),
+    image_path: Path = Path('data/valid/')
 ) -> None:
     model = torch.load(model_path)
     if image_path.is_dir():
         images = list(image_path.glob('**/*.JPG'))
         if not len(images) > 0:
             raise FileNotFoundError('No image files found.')
+        logger.info('Predicting images in directory')
 
         for index, image in enumerate(images):
             true_class = image.parent.name
@@ -92,16 +95,18 @@ def predict_image(
             y_true.append(true_class)
             y_pred.append(pred_class)
             tqdm.write(f"Progress: {index}/{len(images)}")
-            print_prediction(pred_class, pred_idx, outputs, true_class)
+            print_prediction(image, pred_class, pred_idx, outputs, true_class)
         print(classification_report(y_true, y_pred))
         plot_confusion_matrix(y_true, y_pred)
 
     else:
+        print(image_path)
         if not image_path.suffix == '.JPG':
             raise FileNotFoundError('File is not a JPG')
+        logger.info('Predicting one image')
 
         pred_class, pred_idx, outputs = model.predict(image_path)
-        print_prediction(pred_class, pred_idx, outputs, image_path.parent.name)
+        print_prediction(image_path, pred_class, pred_idx, outputs, '')
         aug = Augmentation()
         img = cv2.imread(str(image_path))
         aug_img = aug.contrast(img)
@@ -129,8 +134,8 @@ if __name__ == '__main__':
         if not Path(args.path).exists():
             raise FileNotFoundError('Path does not exist.')
 
+        model_path = unzip_model() if not SOTA_MODEL.exists() else SOTA_MODEL
+        predict_image(model_path, Path(args.path))
     except Exception as e:
         logger.error(e)
         sys.exit(1)
-    model_path = unzip_model() if not SOTA_MODEL.exists() else SOTA_MODEL
-    predict_image(model_path, Path(args.path))

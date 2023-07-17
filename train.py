@@ -39,8 +39,8 @@ def train_model(dataset_train_path: Path) -> str:
         logger.info('Loading dataset done')
         logger.info('Training model')
         learn = vision_learner(data, models.vgg19_bn, metrics=accuracy)
-        learn.fit(1)
-        logger.info('Training done')
+        learn.fit(2)
+        logger.info('Success')
     except Exception as e:
         logger.error('Error while training model')
         raise e
@@ -59,7 +59,7 @@ def train_model(dataset_train_path: Path) -> str:
             version += 1
         model_to_save = f'{dataset_name}_vgg19_v{version}.pkl'
         learn.export(Path(model_to_save))
-        logger.info('Saving done')
+        logger.info('Success')
         return Path(model_to_save)
     except Exception as e:
         logger.error('Error while saving model')
@@ -80,7 +80,7 @@ def zip_model(
                 for filename in filenames:
                     filePath = os.path.join(folderName, filename)
                     zipObj.write(filePath)
-            logger.info('Zipping done')
+            logger.info('Success')
 
         logger.info(
             f'Moving {model_to_save.with_suffix(".zip")} \
@@ -93,7 +93,7 @@ def zip_model(
                       zipped_files_path,
                       f'{model_to_save.with_suffix(".zip")}')
                   )
-        logger.info('Moving done')
+        logger.info('Success')
     except Exception as e:
         logger.error('Error while zipping model')
         raise e
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'path',
         type=str,
-        default='data/images/',
+        default=Path('data/images/'),
         help='Path to image dataset to train the model on'
     )
     args = parser.parse_args()
