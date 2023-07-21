@@ -1,3 +1,4 @@
 .env
 .venv
+venv/
 augmented_directory/
