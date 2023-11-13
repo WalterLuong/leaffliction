@@ -35,6 +35,7 @@ traindata = ImageDataGenerator().flow_from_directory(
     directory=dataset_train_path, target_size=(200, 200))
 testdata = ImageDataGenerator().flow_from_directory(
     directory=dataset_valid_path, target_size=(200, 200))
+num_classes = len(traindata.class_indices)
 
 
 # Model definition (VGG16)
@@ -81,7 +82,7 @@ x = Flatten()(x)
 x = Dense(units=4096, activation="relu")(x)
 x = Dense(units=4096, activation="relu")(x)
 x = Dense(units=1000, activation="relu")(x)
-outputs = Dense(units=8, activation="softmax")(x)
+outputs = Dense(units=num_classes, activation="softmax")(x)
 
 model = Model(inputs=inputs, outputs=outputs)
 
@@ -98,14 +99,14 @@ model.summary()
 # Train
 checkpoint = ModelCheckpoint(
     f'{plant}_vgg16.h5',
-    monitor='val_accuracy',
+    monitor='accuracy',
     verbose=1,
     save_best_only=True,
     mode='max',
     save_freq=1
 )
 early_stopping = EarlyStopping(
-    monitor='val_accuracy',
+    monitor='accuracy',
     patience=20,
     verbose=1,
     mode='max'
@@ -120,6 +121,9 @@ hist = model.fit(
     verbose=1,
     callbacks=callbacks
 )
+
+# Save model
+model.save(f'{plant}_vgg16.h5')
 
 
 # Plot
