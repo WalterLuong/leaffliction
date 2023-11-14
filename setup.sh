@@ -1,6 +1,4 @@
-#!/bin/bash
-
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+unzip leaves.zip
+mkdir images/Apple images/Grape
+mv images/Apple_* images/Apple
+mv images/Grape_* images/Grape

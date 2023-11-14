@@ -3,3 +3,8 @@
 venv/
 augmented_directory/
 *.h5
+images/
+training/
+validation/
+leaves.zip
+__pycache__/

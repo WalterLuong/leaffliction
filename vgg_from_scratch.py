@@ -1,13 +1,14 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Conv2D, MaxPool2D, Flatten, Dense
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import layers, models, callbacks
 from pathlib import Path
 import matplotlib.pyplot as plt
 import warnings
 import logging
+import os
 
 logging.basicConfig(
     level=logging.INFO,
@@ -20,77 +21,42 @@ warnings.filterwarnings("ignore")
 
 
 # GPU memory management
-physical_devices = tf.config.experimental.list_physical_devices('GPU')
-if len(physical_devices) > 0:
-    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Plant selection and dataset paths
-plant = 'Apple'
-dataset_train_path = Path('data', 'images', plant)
-dataset_valid_path = Path('data', 'valid', plant)
+plant = 'All'
+dataset_train_path = Path('training')
+dataset_valid_path = Path('validation')
 
 
 # Load dataset
-traindata = ImageDataGenerator().flow_from_directory(
+traindata = ImageDataGenerator(rescale=1./255).flow_from_directory(
     directory=dataset_train_path, target_size=(200, 200))
-testdata = ImageDataGenerator().flow_from_directory(
+testdata = ImageDataGenerator(rescale=1./255).flow_from_directory(
     directory=dataset_valid_path, target_size=(200, 200))
 num_classes = len(traindata.class_indices)
 
 
 # Model definition (VGG16)
-input_shape = (200, 200, 3)
-inputs = Input(shape=input_shape)
+model = models.Sequential()
+model.add(
+    layers.Conv2D(
+        32,
+        (3, 3),
+        activation="relu",
+        input_shape=(128, 128, 1),
+    )
+)
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Flatten())
+model.add(layers.Dense(64, activation="relu"))
+model.add(layers.Dense(32, activation="relu"))
+model.add(layers.Dense(8, activation="softmax"))
 
-x = Conv2D(filters=64, kernel_size=(3, 3),
-           padding="same", activation="relu")(inputs)
-x = Conv2D(filters=64, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-
-x = Conv2D(filters=128, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=128, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-
-x = Conv2D(filters=256, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=256, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=256, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-
-x = Conv2D(filters=512, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=512, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=512, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-
-x = Conv2D(filters=512, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=512, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = Conv2D(filters=512, kernel_size=(3, 3),
-           padding="same", activation="relu")(x)
-x = MaxPool2D(pool_size=(2, 2), strides=(2, 2))(x)
-
-x = Flatten()(x)
-x = Dense(units=4096, activation="relu")(x)
-x = Dense(units=4096, activation="relu")(x)
-x = Dense(units=1000, activation="relu")(x)
-outputs = Dense(units=num_classes, activation="softmax")(x)
-
-model = Model(inputs=inputs, outputs=outputs)
-
-opt = Adam(learning_rate=1e-4)
 model.compile(
-    optimizer=opt,
-    loss=tf.keras.losses.categorical_crossentropy,
-    metrics=['accuracy']
+    optimizer="adam",
+    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+    metrics=["accuracy"],
 )
 
 model.summary()
@@ -128,7 +94,7 @@ model.save(f'{plant}_vgg16.h5')
 
 # Plot
 plt.plot(hist.history['accuracy'])
-plt.plot(hist.history['val_accuracy'])
+plt.plot(hist.history['accuracy'])
 plt.title('Model Accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
@@ -137,7 +103,7 @@ plt.savefig('accuracy.png')
 plt.show()
 
 plt.plot(hist.history['loss'])
-plt.plot(hist.history['val_loss'])
+plt.plot(hist.history['loss'])
 plt.title('Model Loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
