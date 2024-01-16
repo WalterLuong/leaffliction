@@ -55,4 +55,4 @@ python data_visualization.py /path/to/dataset
 
 
 ## Acknowledgments
-Made in collaboration with [Walter](https://github.com/WalterLuong)
+Made in collaboration with [Walter](https://github.com/WalterLuong) / [Jeremy](https://github.com/ThePush)
